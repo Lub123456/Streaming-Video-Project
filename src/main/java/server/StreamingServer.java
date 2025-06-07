@@ -19,6 +19,13 @@ public class StreamingServer {
 
     private List<VideoFile> availableFiles = new ArrayList<>();
 
+    // Liste ordonnée des résolutions, pour connaître leur hiérarchie
+    private static final List<String> RESOLUTIONS_ORDERED = List.of("240p", "360p", "480p", "720p", "1080p");
+
+    private int getResolutionIndex(String resolution) {
+        return RESOLUTIONS_ORDERED.indexOf(resolution);
+    }
+
     public static void main(String[] args) {
         StreamingServer server = new StreamingServer();
         server.run();
@@ -36,58 +43,61 @@ public class StreamingServer {
         // à remettre à la fin
         //scanAndProcessVideos();
 
-        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-            logger.info("Waiting for client on port " + PORT + "...");
-            Socket clientSocket = serverSocket.accept();
-            logger.info("Client connected from: " + clientSocket.getInetAddress());
+        while (true) {
+            try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+                logger.info("Waiting for client on port " + PORT + "...");
+                Socket clientSocket = serverSocket.accept();
+                logger.info("Client connected from: " + clientSocket.getInetAddress());
 
-            handleClient(clientSocket);
+                handleClient(clientSocket);
 
-        } catch (IOException e) {
-            logger.severe("Server error: " + e.getMessage());
+            } catch (IOException e) {
+                logger.severe("Server error: " + e.getMessage());
+            }
         }
     }
 
     private void scanAndProcessVideos() {
+        // Détection des fichiers existants
         File dir = new File(VIDEO_DIR);
-        if (!dir.exists() || !dir.isDirectory()) {
-            logger.severe("Video directory not found: " + VIDEO_DIR);
-            return;
-        }
-
-        Map<String, Set<String>> foundFiles = new HashMap<>();
-
+        Map<String, Map<String, Set<String>>> existing = new HashMap<>();
         for (File file : Objects.requireNonNull(dir.listFiles())) {
-            String filename = file.getName();
-            String[] parts = filename.split("[-.]");
+            String[] parts = file.getName().split("[-.]");
             if (parts.length >= 3) {
                 String name = parts[0];
                 String resolution = parts[1];
                 String format = parts[2];
 
-                foundFiles.putIfAbsent(name, new HashSet<>());
-                foundFiles.get(name).add(resolution + "." + format);
+                existing.putIfAbsent(name, new HashMap<>());
+                existing.get(name).putIfAbsent(resolution, new HashSet<>());
+                existing.get(name).get(resolution).add(format);
 
                 availableFiles.add(new VideoFile(name, format, resolution));
             }
         }
 
-        // Génération des fichiers manquants
-        for (String name : foundFiles.keySet()) {
-            for (String res : RESOLUTIONS) {
+// Pour chaque film, détermine la résolution maximale et génère seulement jusqu’à elle
+        for (String name : existing.keySet()) {
+            int maxResIndex = existing.get(name).keySet().stream()
+                    .mapToInt(this::getResolutionIndex)
+                    .max()
+                    .orElse(-1);
+
+            for (int i = 0; i <= maxResIndex; i++) {
+                String res = RESOLUTIONS_ORDERED.get(i);
                 for (String fmt : FORMATS) {
-                    String fileKey = res + "." + fmt;
-                    if (!foundFiles.get(name).contains(fileKey)) {
-                        // Vérifier si une résolution source est disponible
+                    boolean alreadyExists = existing.get(name).containsKey(res)
+                            && existing.get(name).get(res).contains(fmt);
+                    if (!alreadyExists) {
                         Optional<VideoFile> source = availableFiles.stream()
-                                .filter(f -> f.getName().equals(name))
+                                .filter(f -> f.getName().equals(name)
+                                        && getResolutionIndex(f.getResolution()) == maxResIndex)
                                 .findFirst();
 
                         if (source.isPresent()) {
                             String inputFile = VIDEO_DIR + source.get().getFilename();
                             String outputFile = VIDEO_DIR + name + "-" + res + "." + fmt;
-
-                            logger.info("Generating missing file: " + outputFile);
+                            logger.info("Création : " + outputFile);
                             FfmpegCommandRunner.convert(inputFile, outputFile, res);
                             availableFiles.add(new VideoFile(name, fmt, res));
                         }
@@ -95,6 +105,7 @@ public class StreamingServer {
                 }
             }
         }
+
     }
 
     private void handleClient(Socket socket) {

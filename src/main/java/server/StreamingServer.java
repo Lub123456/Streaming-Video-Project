@@ -50,6 +50,7 @@ public class StreamingServer {
                 logger.info("Client connected from: " + clientSocket.getInetAddress());
 
                 handleClient(clientSocket);
+                System.out.println("");
 
             } catch (IOException e) {
                 logger.severe("Server error: " + e.getMessage());
@@ -97,7 +98,7 @@ public class StreamingServer {
                         if (source.isPresent()) {
                             String inputFile = VIDEO_DIR + source.get().getFilename();
                             String outputFile = VIDEO_DIR + name + "-" + res + "." + fmt;
-                            logger.info("Création : " + outputFile);
+                            logger.info("Creation : " + outputFile);
                             FfmpegCommandRunner.convert(inputFile, outputFile, res);
                             availableFiles.add(new VideoFile(name, fmt, res));
                         }

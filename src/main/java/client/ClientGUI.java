@@ -41,9 +41,10 @@ public class ClientGUI extends JFrame {
 
     private void fetchVideos() {
         String format = (String) formatSelector.getSelectedItem();
-        double fakeSpeedMbps = 2.5; // Simulé pour l'instant, remplace par SpeedTester plus tard
+        double speedMbps = SpeedTester.measureDownloadSpeed();
+        JOptionPane.showMessageDialog(this, "Estimated speed: " + speedMbps + " Mbps");
 
-        List<VideoFile> videos = client.connectToServer(format, fakeSpeedMbps);
+        List<VideoFile> videos = client.connectToServer(format, speedMbps);
         resultArea.setText(""); // Clear
 
         if (videos.isEmpty()) {

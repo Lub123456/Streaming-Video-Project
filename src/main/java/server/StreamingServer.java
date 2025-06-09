@@ -2,13 +2,14 @@ package server;
 
 import shared.VideoFile;
 import utils.FfmpegCommandRunner;
+import utils.LoggerConfig;
+import shared.Protocol;
 
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
 import java.util.logging.Logger;
-import utils.LoggerConfig;
 
 public class StreamingServer {
 
@@ -116,15 +117,24 @@ public class StreamingServer {
                 ObjectInputStream input = new ObjectInputStream(socket.getInputStream());
                 ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream())
         ) {
-            // Exemple de protocole de communication : en attente du format + bitrate
-            String format = (String) input.readObject();
-            double bitrateMbps = (Double) input.readObject();
+            Object command = input.readObject();
 
-            logger.info("Client requested format=" + format + ", bitrate=" + bitrateMbps + " Mbps");
+            if ("play_request".equals(command)) {
+                VideoFile file = (VideoFile) input.readObject();
+                String protoStr = (String) input.readObject();
+                Protocol protocol = Protocol.valueOf(protoStr);
+                logger.info("Streaming requested: " + file.getFilename() + " via " + protocol);
+                startStreaming(file, protocol);
 
-            List<VideoFile> suitable = getFilesByFormatAndBitrate(format, bitrateMbps);
-            output.writeObject(suitable);
-            output.flush();
+            } else if (command instanceof String format) {
+                double bitrateMbps = (Double) input.readObject();
+                logger.info("Client requested format=" + format + ", bitrate=" + bitrateMbps + " Mbps");
+
+                List<VideoFile> suitable = getFilesByFormatAndBitrate(format, bitrateMbps);
+                output.writeObject(suitable);
+                output.flush();
+            }
+
 
         } catch (IOException | ClassNotFoundException e) {
             logger.severe("Client communication error: " + e.getMessage());
@@ -151,4 +161,23 @@ public class StreamingServer {
         }
         return result;
     }
+
+    private void startStreaming(VideoFile file, Protocol protocol) {
+        String filePath = VIDEO_DIR + file.getFilename();
+        String command = switch (protocol) {
+            case TCP -> "ffmpeg -re -i " + filePath + " -f matroska tcp://localhost:8888";
+            case UDP -> "ffmpeg -re -i " + filePath + " -f mpegts udp://localhost:8888";
+            case RTP_UDP -> "ffmpeg -re -i " + filePath + " -f rtp rtp://localhost:5004";
+        };
+
+        try {
+            ProcessBuilder pb = new ProcessBuilder(command.split(" "));
+            pb.inheritIO();
+            pb.start();
+            logger.info("FFMPEG command: " + command);
+        } catch (IOException e) {
+            logger.severe("FFMPEG launch failed: " + e.getMessage());
+        }
+    }
+
 }

@@ -5,6 +5,7 @@ import shared.VideoFile;
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
+import utils.LoggerConfig;
 
 public class ClientGUI extends JFrame {
 
@@ -60,6 +61,7 @@ public class ClientGUI extends JFrame {
     }
 
     public static void main(String[] args) {
+        utils.LoggerConfig.configureSimpleLogging();
         SwingUtilities.invokeLater(ClientGUI::new);
     }
 }

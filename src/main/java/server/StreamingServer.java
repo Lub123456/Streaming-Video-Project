@@ -8,6 +8,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
 import java.util.logging.Logger;
+import utils.LoggerConfig;
 
 public class StreamingServer {
 
@@ -27,6 +28,7 @@ public class StreamingServer {
     }
 
     public static void main(String[] args) {
+        utils.LoggerConfig.configureSimpleLogging();
         StreamingServer server = new StreamingServer();
         server.run();
     }

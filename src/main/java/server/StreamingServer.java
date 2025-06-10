@@ -18,6 +18,7 @@ public class StreamingServer {
     private static final List<String> FORMATS = List.of("mp4", "avi", "mkv");
     private static final List<String> RESOLUTIONS = List.of("240p", "360p", "480p", "720p", "1080p");
     private static final int PORT = 9090;
+    private Process ffmpegProcess;
 
     private List<VideoFile> availableFiles = new ArrayList<>();
 
@@ -37,14 +38,16 @@ public class StreamingServer {
     public void run() {
         logger.info("Starting Streaming Server...");
         // à enlever à la fin
+        /*
         Scanner sc = new Scanner(System.in);
         System.out.print("Start videos processing ? (y/n) : ");
         if (sc.nextLine().equalsIgnoreCase("y")) {
             scanAndProcessVideos();
         }
+        */
 
         // à remettre à la fin
-        //scanAndProcessVideos();
+        scanAndProcessVideos();
 
         while (true) {
             try (ServerSocket serverSocket = new ServerSocket(PORT)) {
@@ -126,6 +129,17 @@ public class StreamingServer {
                 logger.info("Streaming requested: " + file.getFilename() + " via " + protocol);
                 startStreaming(file, protocol);
 
+                // Attendre la fermeture du client
+                try {
+                    socket.getInputStream().read();
+                } catch (IOException ignored) {}
+
+                // Arrêter ffmpeg quand le client ferme la connexion
+                if (ffmpegProcess != null && ffmpegProcess.isAlive()) {
+                    ffmpegProcess.destroy();
+                    logger.info("FFMPEG process stopped.");
+                }
+
             } else if (command instanceof String format) {
                 double bitrateMbps = (Double) input.readObject();
                 logger.info("Client requested format=" + format + ", bitrate=" + bitrateMbps + " Mbps");
@@ -138,6 +152,11 @@ public class StreamingServer {
 
         } catch (IOException | ClassNotFoundException e) {
             logger.severe("Client communication error: " + e.getMessage());
+            // Arrêter ffmpeg en cas d'erreur/fermeture
+            if (ffmpegProcess != null && ffmpegProcess.isAlive()) {
+                ffmpegProcess.destroy();
+                logger.info("FFMPEG process stopped (on error).");
+            }
         }
     }
 
@@ -165,15 +184,18 @@ public class StreamingServer {
     private void startStreaming(VideoFile file, Protocol protocol) {
         String filePath = VIDEO_DIR + file.getFilename();
         String command = switch (protocol) {
-            case TCP -> "ffmpeg -re -i " + filePath + " -f matroska tcp://localhost:8888";
+            case TCP -> "ffmpeg -re -i " + filePath + " -f mpegts tcp://localhost:8888?listen";
             case UDP -> "ffmpeg -re -i " + filePath + " -f mpegts udp://localhost:8888";
-            case RTP_UDP -> "ffmpeg -re -i " + filePath + " -f rtp rtp://localhost:5004";
+            case RTP_UDP -> "ffmpeg -re -i " + filePath +
+                    " -map 0:v:0 -c:v libx264 -f rtp rtp://localhost:5004" +
+                    " -map 0:a:0 -c:a aac -f rtp rtp://localhost:5006" +
+                    " -sdp_file sdp/stream_rtp.sdp";
         };
 
         try {
             ProcessBuilder pb = new ProcessBuilder(command.split(" "));
             pb.inheritIO();
-            pb.start();
+            ffmpegProcess = pb.start();
             logger.info("FFMPEG command: " + command);
         } catch (IOException e) {
             logger.severe("FFMPEG launch failed: " + e.getMessage());

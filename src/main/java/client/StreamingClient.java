@@ -72,7 +72,7 @@ public class StreamingClient {
         return switch (protocol) {
             case TCP -> "ffplay tcp://localhost:8888";
             case UDP -> "ffplay udp://localhost:8888";
-            case RTP_UDP -> "ffplay rtp://localhost:5004";
+            case RTP_UDP -> "ffplay -protocol_whitelist file,rtp,udp -i sdp/stream_rtp.sdp";
         };
     }
 

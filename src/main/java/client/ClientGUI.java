@@ -13,6 +13,7 @@ public class ClientGUI extends JFrame {
     private JComboBox<String> formatSelector;
     private JButton fetchButton;
     private JTextArea resultArea;
+    private JLabel protocolLabel;
     private JComboBox<String> protocolSelector;
     private JButton playButton;
     private JList<VideoFile> videoList;
@@ -40,8 +41,12 @@ public class ClientGUI extends JFrame {
 
         protocolSelector = new JComboBox<>(new String[]{"Auto", "TCP", "UDP", "RTP_UDP"});
         playButton = new JButton("Play video");
+        protocolSelector.setVisible(false);
+        playButton.setVisible(false);
+        protocolLabel = new JLabel("Protocol:");
+        protocolLabel.setVisible(false);
 
-        topPanel.add(new JLabel("Protocol:"));
+        topPanel.add(protocolLabel);
         topPanel.add(protocolSelector);
         topPanel.add(playButton);
 
@@ -56,6 +61,9 @@ public class ClientGUI extends JFrame {
 
     private void fetchVideos() {
         String format = (String) formatSelector.getSelectedItem();
+        protocolLabel.setVisible(true);
+        protocolSelector.setVisible(true);
+        playButton.setVisible(true);
         double speedMbps = SpeedTester.measureDownloadSpeed();
         JOptionPane.showMessageDialog(this, "Estimated speed: " + speedMbps + " Mbps");
 

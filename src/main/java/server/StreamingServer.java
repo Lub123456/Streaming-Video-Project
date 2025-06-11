@@ -16,14 +16,12 @@ public class StreamingServer {
     private static final Logger logger = Logger.getLogger(StreamingServer.class.getName());
     private static final String VIDEO_DIR = "videos/";
     private static final List<String> FORMATS = List.of("mp4", "avi", "mkv");
-    private static final List<String> RESOLUTIONS = List.of("240p", "360p", "480p", "720p", "1080p");
+    // Liste ordonnée des résolutions, pour connaître leur hiérarchie
+    private static final List<String> RESOLUTIONS_ORDERED = List.of("240p", "360p", "480p", "720p", "1080p");
     private static final int PORT = 9090;
     private Process ffmpegProcess;
 
     private List<VideoFile> availableFiles = new ArrayList<>();
-
-    // Liste ordonnée des résolutions, pour connaître leur hiérarchie
-    private static final List<String> RESOLUTIONS_ORDERED = List.of("240p", "360p", "480p", "720p", "1080p");
 
     private int getResolutionIndex(String resolution) {
         return RESOLUTIONS_ORDERED.indexOf(resolution);
@@ -197,9 +195,19 @@ public class StreamingServer {
             pb.inheritIO();
             ffmpegProcess = pb.start();
             logger.info("FFMPEG command: " + command);
+
+            // Attendre la fin du processus FFMPEG
+            new Thread(() -> {
+                try {
+                    ffmpegProcess.waitFor();
+                    logger.info("End of FFMPEG stream");
+                } catch (InterruptedException e) {
+                    logger.warning("FFMPEG interrupted: " + e.getMessage());
+                }
+            }).start();
+
         } catch (IOException e) {
             logger.severe("FFMPEG launch failed: " + e.getMessage());
         }
     }
-
 }

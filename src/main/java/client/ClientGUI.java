@@ -95,7 +95,9 @@ public class ClientGUI extends JFrame {
                 protocol = Protocol.valueOf(selectedProto);
             }
 
-            client.requestVideoStream(selected, protocol);
+            client.requestVideoStream(selected, protocol, () -> {
+                SwingUtilities.invokeLater(() -> dispose());
+            });
         });
 
 

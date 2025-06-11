@@ -43,7 +43,7 @@ public class StreamingClient {
         return List.of(); // Retourne une liste vide si erreur
     }
 
-    public void requestVideoStream(VideoFile file, Protocol protocol) {
+    public void requestVideoStream(VideoFile file, Protocol protocol, Runnable onPlaybackEnd) {
         try {
             socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
             output = new ObjectOutputStream(socket.getOutputStream());
@@ -60,10 +60,20 @@ public class StreamingClient {
             String command = buildFfmpegClientCommand(file, protocol);
             ProcessBuilder pb = new ProcessBuilder(command.split(" "));
             pb.inheritIO();
-            Thread.sleep(2000); // attendre 2 secondes avant de lancer ffmpeg client
-            pb.start();
+            Process ffplayProcess = pb.start();
 
-        } catch (IOException | InterruptedException e) {
+            // ✅ Thread qui attend la fin de ffplay
+            new Thread(() -> {
+                try {
+                    ffplayProcess.waitFor(); // Attente blocante
+                    System.out.println("End of FFPLAY process.");
+                    onPlaybackEnd.run(); // Callback pour fermer la fenêtre Swing
+                } catch (InterruptedException e) {
+                    System.err.println("Playback interrupted: " + e.getMessage());
+                }
+            }).start();
+
+        } catch (IOException e) {
             System.err.println("Video playback error: " + e.getMessage());
         }
     }
@@ -75,7 +85,6 @@ public class StreamingClient {
             case RTP_UDP -> "ffplay -protocol_whitelist file,rtp,udp -i sdp/stream_rtp.sdp";
         };
     }
-
 
     public void close() {
         try {

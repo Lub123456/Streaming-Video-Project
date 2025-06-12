@@ -115,4 +115,4 @@ Accepted formats: `mp4`, `avi`, `mkv`
 ## 📝 Author
 
 Lubin TERRIEN – 2025\
-Student project for Object-Oriented Programming (C++) class at University of West Attica (Athens, GREECE).
+Student project for Multimedia & Multimedia Communications (Java) class at University of West Attica (Athens, GREECE).

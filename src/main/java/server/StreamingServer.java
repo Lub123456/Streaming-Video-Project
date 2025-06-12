@@ -35,16 +35,7 @@ public class StreamingServer {
 
     public void run() {
         logger.info("Starting Streaming Server...");
-        // à enlever à la fin
-        /*
-        Scanner sc = new Scanner(System.in);
-        System.out.print("Start videos processing ? (y/n) : ");
-        if (sc.nextLine().equalsIgnoreCase("y")) {
-            scanAndProcessVideos();
-        }
-        */
 
-        // à remettre à la fin
         scanAndProcessVideos();
 
         while (true) {
@@ -160,11 +151,11 @@ public class StreamingServer {
 
     private List<VideoFile> getFilesByFormatAndBitrate(String format, double bitrate) {
         Map<String, Double> resolutionBitrates = Map.of(
-                "240p", 0.5,
+                "240p", 0.7,
                 "360p", 1.0,
-                "480p", 2.5,
-                "720p", 5.0,
-                "1080p", 8.0
+                "480p", 2.0,
+                "720p", 4.0,
+                "1080p", 6.0
         );
 
         List<VideoFile> result = new ArrayList<>();

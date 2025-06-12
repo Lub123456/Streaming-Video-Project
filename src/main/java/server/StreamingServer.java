@@ -60,9 +60,11 @@ public class StreamingServer {
         for (File file : Objects.requireNonNull(dir.listFiles())) {
             String[] parts = file.getName().split("[-.]");
             if (parts.length >= 3) {
+                String format = parts[2];
+                if (!FORMATS.contains(format)) continue;
+
                 String name = parts[0];
                 String resolution = parts[1];
-                String format = parts[2];
 
                 existing.putIfAbsent(name, new HashMap<>());
                 existing.get(name).putIfAbsent(resolution, new HashSet<>());

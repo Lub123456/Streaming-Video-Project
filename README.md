@@ -112,7 +112,7 @@ Accepted formats: `mp4`, `avi`, `mkv`
 
 ---
 
-## 📄 License
+## 📝 Author
 
-Project created for educational purposes.
-
+Lubin TERRIEN – 2025\
+Student project for Object-Oriented Programming (C++) class at University of West Attica (Athens, GREECE).

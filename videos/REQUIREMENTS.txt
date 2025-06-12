@@ -5,18 +5,17 @@ Video Folder Requirements
 Place all your video files in this folder.
 
 Each file must follow the naming format:
-
-    Title_movie-<resolution>.<format>
+- <name>-<resolution>.<format>
 
 Examples:
-    myfilm-240p.mp4
-    MovieName-720p.avi
-    Test_Movie-1080p.mkv
+- myfilm-240p.mp4
+- MovieName-720p.avi
+- Test_Movie-1080p.mkv
 
 Accepted video formats:
-    - mp4
-    - avi
-    - mkv
+- mp4
+- avi
+- mkv
 
 Only files with these formats and naming convention will be detected and processed.
 All other files will be ignored automatically.

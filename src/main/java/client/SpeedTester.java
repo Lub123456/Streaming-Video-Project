@@ -8,15 +8,12 @@ public class SpeedTester {
 
     private static final Logger logger = Logger.getLogger(SpeedTester.class.getName());
 
-
-    /**
-     * Performs a download speed test from a remote file (HTTP).
-     * @return Estimated download speed in Mbps
-     */
+     // Performs a download speed test from a remote file (HTTP).
+     // Return estimated download speed in Mbps
     public static double measureDownloadSpeed() {
         final String testFileUrl = "http://nbg1-speed.hetzner.com/100MB.bin"; // Public test file
         final int bufferSize = 1024 * 8; // 8 KB
-        final int maxDownloadBytes = 5 * 1024 * 1024; // Limit to ~5 MB to avoid overuse
+        final int maxDownloadBytes = 5 * 1024 * 1024; // Limit to 5 MB to avoid overuse
 
         try {
             logger.info("Starting download speed test...");
@@ -44,7 +41,7 @@ public class SpeedTester {
 
         } catch (Exception e) {
             System.err.println("Speed test error: " + e.getMessage());
-            return 1.0; // Default value in case of error
+            return 1.0;
         }
     }
 }

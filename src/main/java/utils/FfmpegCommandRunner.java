@@ -4,8 +4,8 @@ import java.io.IOException;
 
 public class FfmpegCommandRunner {
 
+    // Converts a video file to a specified resolution using ffmpeg
     public static void convert(String inputPath, String outputPath, String resolution) {
-        // Exemple : "ffmpeg -i input -s 640x360 output"
         String scale = switch (resolution) {
             case "240p" -> "426x240";
             case "360p" -> "640x360";

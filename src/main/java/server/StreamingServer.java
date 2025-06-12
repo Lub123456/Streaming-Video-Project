@@ -16,7 +16,6 @@ public class StreamingServer {
     private static final Logger logger = Logger.getLogger(StreamingServer.class.getName());
     private static final String VIDEO_DIR = "videos/";
     private static final List<String> FORMATS = List.of("mp4", "avi", "mkv");
-    // Liste ordonnée des résolutions, pour connaître leur hiérarchie
     private static final List<String> RESOLUTIONS_ORDERED = List.of("240p", "360p", "480p", "720p", "1080p");
     private static final int PORT = 9090;
     private Process ffmpegProcess;
@@ -33,6 +32,7 @@ public class StreamingServer {
         server.run();
     }
 
+    // Starts the streaming server and processes video files
     public void run() {
         logger.info("Starting Streaming Server...");
 
@@ -53,8 +53,9 @@ public class StreamingServer {
         }
     }
 
+    // Scans the video directory, processes existing files, and generates missing resolutions
     private void scanAndProcessVideos() {
-        // Détection des fichiers existants
+        // Detection of existing video files
         File dir = new File(VIDEO_DIR);
         Map<String, Map<String, Set<String>>> existing = new HashMap<>();
         for (File file : Objects.requireNonNull(dir.listFiles())) {
@@ -74,7 +75,7 @@ public class StreamingServer {
             }
         }
 
-// Pour chaque film, détermine la résolution maximale et génère seulement jusqu’à elle
+        // Generate missing resolutions for each video
         for (String name : existing.keySet()) {
             int maxResIndex = existing.get(name).keySet().stream()
                     .mapToInt(this::getResolutionIndex)
@@ -106,6 +107,7 @@ public class StreamingServer {
 
     }
 
+    // Handles client connections and processes requests
     private void handleClient(Socket socket) {
         try (
                 ObjectInputStream input = new ObjectInputStream(socket.getInputStream());
@@ -120,12 +122,12 @@ public class StreamingServer {
                 logger.info("Streaming requested: " + file.getFilename() + " via " + protocol);
                 startStreaming(file, protocol);
 
-                // Attendre la fermeture du client
+                // Wait for the client to close the connection
                 try {
                     socket.getInputStream().read();
                 } catch (IOException ignored) {}
 
-                // Arrêter ffmpeg quand le client ferme la connexion
+                // Stop the FFMPEG process when the client disconnects
                 if (ffmpegProcess != null && ffmpegProcess.isAlive()) {
                     ffmpegProcess.destroy();
                     logger.info("FFMPEG process stopped.");
@@ -151,6 +153,7 @@ public class StreamingServer {
         }
     }
 
+
     private List<VideoFile> getFilesByFormatAndBitrate(String format, double bitrate) {
         Map<String, Double> resolutionBitrates = Map.of(
                 "240p", 0.7,
@@ -172,6 +175,7 @@ public class StreamingServer {
         return result;
     }
 
+    // Starts the FFMPEG streaming process based on the requested video file and protocol
     private void startStreaming(VideoFile file, Protocol protocol) {
         String filePath = VIDEO_DIR + file.getFilename();
         String command = switch (protocol) {
@@ -189,7 +193,6 @@ public class StreamingServer {
             ffmpegProcess = pb.start();
             logger.info("FFMPEG command: " + command);
 
-            // Attendre la fin du processus FFMPEG
             new Thread(() -> {
                 try {
                     ffmpegProcess.waitFor();

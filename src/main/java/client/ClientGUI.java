@@ -59,6 +59,7 @@ public class ClientGUI extends JFrame {
         setVisible(true);
     }
 
+    // Fetch videos from the server based on selected format and speed
     private void fetchVideos() {
         String format = (String) formatSelector.getSelectedItem();
         protocolLabel.setVisible(true);

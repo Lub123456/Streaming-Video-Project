@@ -12,24 +12,25 @@ public class StreamingClient {
 
     private static final Logger logger = Logger.getLogger(StreamingClient.class.getName());
     private static final String SERVER_ADDRESS = "localhost";
-    private static final int SERVER_PORT = 9090;
+    private static final int SERVER_PORT = 9090; // Port for the server connection
+    private static final int TCP_UDP_PORT = 8888; // Port for TCP/UDP streaming
 
     private Socket socket;
     private ObjectOutputStream output;
     private ObjectInputStream input;
 
+    // Make the connection to the server
     public List<VideoFile> connectToServer(String format, double speedMbps) {
         try {
             socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
             output = new ObjectOutputStream(socket.getOutputStream());
             input = new ObjectInputStream(socket.getInputStream());
 
-            // Envoie du format + débit
             output.writeObject(format);
             output.writeObject(speedMbps);
             output.flush();
 
-            // Réception des vidéos disponibles
+            // Reception of available videos
             Object response = input.readObject();
             if (response instanceof List<?> list) {
                 return list.stream()
@@ -40,9 +41,10 @@ public class StreamingClient {
         } catch (IOException | ClassNotFoundException e) {
             logger.severe("Communication error with server : " + e.getMessage());
         }
-        return List.of(); // Retourne une liste vide si erreur
+        return List.of();
     }
 
+    // Request a video stream from the server
     public void requestVideoStream(VideoFile file, Protocol protocol, Runnable onPlaybackEnd) {
         try {
             socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
@@ -62,12 +64,11 @@ public class StreamingClient {
             pb.inheritIO();
             Process ffplayProcess = pb.start();
 
-            // ✅ Thread qui attend la fin de ffplay
             new Thread(() -> {
                 try {
-                    ffplayProcess.waitFor(); // Attente blocante
+                    ffplayProcess.waitFor();
                     System.out.println("End of FFPLAY process.");
-                    onPlaybackEnd.run(); // Callback pour fermer la fenêtre Swing
+                    onPlaybackEnd.run();
                 } catch (InterruptedException e) {
                     System.err.println("Playback interrupted: " + e.getMessage());
                 }
@@ -78,14 +79,16 @@ public class StreamingClient {
         }
     }
 
+    // Build the command to run FFMPEG client based on the protocol
     private String buildFfmpegClientCommand(VideoFile file, Protocol protocol) {
         return switch (protocol) {
-            case TCP -> "ffplay tcp://localhost:8888";
-            case UDP -> "ffplay udp://localhost:8888";
+            case TCP -> "ffplay tcp://localhost:" + TCP_UDP_PORT;
+            case UDP -> "ffplay udp://localhost:" + TCP_UDP_PORT;
             case RTP_UDP -> "ffplay -protocol_whitelist file,rtp,udp -i sdp/stream_rtp.sdp";
         };
     }
 
+    // Close the socket and streams
     public void close() {
         try {
             if (socket != null) socket.close();

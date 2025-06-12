@@ -71,6 +71,7 @@ java client.ClientGUI
 - `FFMPEG` + `FFPLAY` installed and accessible in PATH
 - Internet access for bandwidth test
 - Ports:
+  - Server/Client communication: `9090`
   - TCP: `8888`
   - UDP: `8888`
   - RTP: `5004` (video), `5006` (audio)

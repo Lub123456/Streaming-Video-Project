@@ -47,7 +47,6 @@ project-root/
 java server.StreamingServer
 ```
 
----
 
 ### Client
 

@@ -5,7 +5,7 @@ It supports multiple streaming protocols, detects the client's bandwidth, and dy
 
 ---
 
-## 🎯 Features
+## Features
 
 - Java client-server architecture
 - Bandwidth detection using real-time download test
@@ -17,7 +17,7 @@ It supports multiple streaming protocols, detects the client's bandwidth, and dy
 
 ---
 
-## 📁 Folder Structure
+## Folder Structure
 
 ```
 project-root/
@@ -36,9 +36,9 @@ project-root/
 
 ---
 
-## 🚀 How to Run
+## How to Run
 
-### 👥 Server
+### Server
 
 1. Place your videos in the `videos/` folder (see [REQUIREMENTS](videos/REQUIREMENTS.txt))
 2. Launch the server:
@@ -49,7 +49,7 @@ java server.StreamingServer
 
 ---
 
-### 👥 Client
+### Client
 
 1. Launch the GUI client:
 
@@ -65,7 +65,7 @@ java client.ClientGUI
 
 ---
 
-## ⚙️ Requirements
+## ⚙Requirements
 
 - Java 17+ (or compatible)
 - `FFMPEG` + `FFPLAY` installed and accessible in PATH
@@ -78,7 +78,7 @@ java client.ClientGUI
 
 ---
 
-## 🎬 Video Naming Rules
+## Video Naming Rules
 
 All video files **must** follow this naming format:
 
@@ -100,7 +100,7 @@ Accepted formats: `mp4`, `avi`, `mkv`
 
 ---
 
-## 💡 Notes
+## Notes
 
 - The server auto-generates lower resolution versions using `FFMPEG`
 - Playback automatically closes the client GUI when finished
@@ -113,7 +113,7 @@ Accepted formats: `mp4`, `avi`, `mkv`
 
 ---
 
-## 📝 Author
+## Author
 
 Lubin TERRIEN – 2025\
 Student project for Multimedia & Multimedia Communications (Java) class at University of West Attica (Athens, GREECE).
